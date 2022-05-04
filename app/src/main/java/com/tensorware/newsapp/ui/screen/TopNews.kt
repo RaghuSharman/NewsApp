@@ -17,6 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.tensorware.newsapp.MockData
+import com.tensorware.newsapp.MockData.getTimeAgo
 import com.tensorware.newsapp.model.NewsData
 import com.tensorware.newsapp.ui.theme.NewsAppTheme
 
@@ -68,7 +69,7 @@ fun TopNewsItem(newsData: NewsData, onNewsClick: () -> Unit = {}) {
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = newsData.publishedAt,
+                text = MockData.stringToDate(newsData.publishedAt).getTimeAgo(),
                 color = Color.White,
                 fontWeight = FontWeight.SemiBold
             )

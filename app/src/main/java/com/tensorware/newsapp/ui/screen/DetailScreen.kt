@@ -5,10 +5,9 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Icon
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
@@ -20,6 +19,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.tensorware.newsapp.MockData
+import com.tensorware.newsapp.MockData.getTimeAgo
 import com.tensorware.newsapp.R
 import com.tensorware.newsapp.model.NewsData
 import com.tensorware.newsapp.ui.theme.NewsAppTheme
@@ -29,9 +32,9 @@ import com.tensorware.newsapp.ui.theme.NewsAppTheme
  */
 
 @Composable
-//navController: NavController,
-fun DetailScreen(newsData: NewsData, scrollState: ScrollState) {
-    Scaffold(topBar = {}) {
+//
+fun DetailScreen(newsData: NewsData, scrollState: ScrollState, navController: NavController) {
+    Scaffold(topBar = { DetailTopAppBar(onBackPressed = { navController.popBackStack() }) }) {
 
         Column(
             modifier = Modifier
@@ -60,7 +63,10 @@ fun DetailScreen(newsData: NewsData, scrollState: ScrollState) {
 //            Text(text = newsData.publishedAt, )
 
                 InfoWithIcon(icon = Icons.Default.Edit, info = newsData.author)
-                InfoWithIcon(icon = Icons.Default.DateRange, info = newsData.publishedAt)
+                InfoWithIcon(
+                    icon = Icons.Default.DateRange,
+                    info = MockData.stringToDate(newsData.publishedAt).getTimeAgo()
+                )
             }
             Text(
                 text = newsData.title,
@@ -74,6 +80,17 @@ fun DetailScreen(newsData: NewsData, scrollState: ScrollState) {
             )
         }
     }
+
+}
+
+@Composable
+fun DetailTopAppBar(onBackPressed: () -> Unit = {}) {
+    TopAppBar(title = { Text(text = "Detail Screen", fontWeight = FontWeight.SemiBold) },
+        navigationIcon = {
+            IconButton(onClick = { onBackPressed }) {
+                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "")
+            }
+        })
 
 }
 
@@ -106,7 +123,7 @@ fun DetailScreenPreview() {
                 description = "Joseph Maldonado, known as Joe Exotic on the 2020 Netflix docuseries \\\"Tiger King: Murder, Mayhem and Madness,\\\" has been diagnosed with an aggressive form of prostate cancer, according to a letter written by Maldonado.",
                 publishedAt = "2021-11-04T05:35:21Z"
             ),
-            rememberScrollState()
+            rememberScrollState(), rememberNavController()
         )
     }
 }
