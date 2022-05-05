@@ -128,7 +128,7 @@ object MockData {
                 Locale.ENGLISH).parse(publishedAt)
 
             }else {
-                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss",
+                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssxx",
                     Locale.ENGLISH).parse(publishedAt)
             }
 
