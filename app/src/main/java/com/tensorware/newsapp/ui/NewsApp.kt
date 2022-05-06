@@ -13,7 +13,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.tensorware.newsapp.BottomMenuScreen
-import com.tensorware.newsapp.MockData
 import com.tensorware.newsapp.components.BottomMenu
 import com.tensorware.newsapp.model.TopNewsArticle
 import com.tensorware.newsapp.network.NewsManager
@@ -58,13 +57,16 @@ fun Navigation(
     // articles can be nullable hence surround the entire navHost inside
     // articles?.let
     articles?.let {
-        NavHost(navController = navController, startDestination =
-        BottomMenuScreen.TopNews.route, modifier = Modifier.padding(paddingValues = paddingValues)
+        NavHost(
+            navController = navController,
+            startDestination =
+            BottomMenuScreen.TopNews.route,
+            modifier = Modifier.padding(paddingValues = paddingValues)
         )
 
 
         {
-            bottomNavigation(navController = navController, articles)
+            bottomNavigation(navController = navController, articles, newsManager = newsManager)
 
             composable(
                 "Detail/{index}",
@@ -90,13 +92,23 @@ fun Navigation(
 
 }
 
-fun NavGraphBuilder.bottomNavigation(navController: NavController, article: List<TopNewsArticle>) {
+fun NavGraphBuilder.bottomNavigation(
+    navController: NavController,
+    article: List<TopNewsArticle>, newsManager: NewsManager
+) {
 
     composable(BottomMenuScreen.TopNews.route) {
         TopNews(navController = navController, articles = article)
     }
     composable(BottomMenuScreen.Categories.route) {
-        Categories()
+        newsManager.getArticleByCategory("business")
+        newsManager.onSelectedCategoryChanged("business")
+
+
+        Categories(newsManager = newsManager, onFetchCategory = {
+            newsManager.onSelectedCategoryChanged(it)
+            newsManager.getArticleByCategory(it)
+        })
     }
     composable(BottomMenuScreen.Sources.route) {
         Sources()

@@ -18,7 +18,7 @@ object Api {
         .build()
 
     private val retrofit = Retrofit.Builder()
-//        .addConverterFactory(MoshiConverterFactory.create(moshi))
+
         .addConverterFactory(MoshiConverterFactory.create(moshi))
         .baseUrl(BASE_URL)
         .build()
