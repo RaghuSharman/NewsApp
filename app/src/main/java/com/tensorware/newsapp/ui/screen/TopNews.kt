@@ -3,9 +3,9 @@ package com.tensorware.newsapp.ui.screen
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,8 +20,9 @@ import com.skydoves.landscapist.coil.CoilImage
 import com.tensorware.newsapp.MockData
 import com.tensorware.newsapp.MockData.getTimeAgo
 import com.tensorware.newsapp.R
-import com.tensorware.newsapp.model.NewsData
+import com.tensorware.newsapp.components.SearchBar
 import com.tensorware.newsapp.model.TopNewsArticle
+import com.tensorware.newsapp.network.NewsManager
 import com.tensorware.newsapp.ui.theme.NewsAppTheme
 
 /**
@@ -29,23 +30,38 @@ import com.tensorware.newsapp.ui.theme.NewsAppTheme
  */
 
 @Composable
-fun TopNews(navController: NavController, articles: List<TopNewsArticle>) {
+fun TopNews(
+    navController: NavController,
+    articles: List<TopNewsArticle>,
+    query: MutableState<String>,
+    newsManager: NewsManager
+) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Top News", fontWeight = FontWeight.SemiBold)
+//        Text(text = "Top News", fontWeight = FontWeight.SemiBold)
 //        Button(onClick = {
 //            navController.navigate("DetailScreen")
 //        }) {
 //            Text(text = "Go to Detail Screen")
 //        }
+        SearchBar(query = query, newsManager = newsManager)
+
+        val searchedText = query.value
+        val resultList = mutableListOf<TopNewsArticle>()
+        if (searchedText != "") {
+            resultList.addAll(newsManager.searchedNewsResponse.value.articles ?: articles)
+        } else {
+            resultList.addAll(articles)
+        }
+
+
         LazyColumn {
-            items(articles.size) {
-                index ->
+            items(resultList.size) { index ->
                 TopNewsItem(
-                    article = articles[index],
-                    onNewsClick = { navController.navigate("Detail/$index")}
+                    article = resultList[index],
+                    onNewsClick = { navController.navigate("Detail/$index") }
 
                 )
             }
@@ -76,17 +92,26 @@ fun TopNewsItem(article: TopNewsArticle, onNewsClick: () -> Unit = {}) {
                 .padding(top = 16.dp, start = 16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = MockData.stringToDate(article.publishedAt!!).getTimeAgo(),
-                color = Color.White,
-                fontWeight = FontWeight.SemiBold
-            )
+
+            article.publishedAt?.let {
+                Text(
+                    text = MockData.stringToDate(article.publishedAt).getTimeAgo(),
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+
             Spacer(modifier = Modifier.height(80.dp))
-            Text(
-                text = article.title!!,
-                color = Color.White,
-                fontWeight = FontWeight.SemiBold
-            )
+            article.title?.let {
+                Text(
+                    text = article.title,
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+
         }
     }
 }

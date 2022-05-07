@@ -22,6 +22,8 @@ class NewsManager {
             _newsResponse
         }
 
+    val sourceName = mutableStateOf("abc-news")
+
 
     private val _getArticleByCategory = mutableStateOf(TopNewsResponse())
     val getArticleByCategory: MutableState<TopNewsResponse>
@@ -29,16 +31,32 @@ class NewsManager {
             _getArticleByCategory
         }
 
+    private val _getArticleBySource = mutableStateOf(TopNewsResponse())
+    val getArticleBySource: MutableState<TopNewsResponse>
+        @Composable get() = remember {
+            _getArticleBySource
+        }
+
+    val query = mutableStateOf("")
+
+
     val selectedCategory: MutableState<ArticleCategory?> = mutableStateOf(null)
 
     init {
         getArticles()
     }
 
+    private val _searchedNewsResponse = mutableStateOf(TopNewsResponse())
+    val searchedNewsResponse: MutableState<TopNewsResponse>
+        @Composable get() = remember {
+            _searchedNewsResponse
+        }
+
+
     private fun getArticles() {
         val service = Api.retrofitService.getTopArticles(
             "US",
-            Api.API_KEY
+//            Api.API_KEY
         )
 
 
@@ -68,7 +86,9 @@ class NewsManager {
 
 
      fun getArticleByCategory(category: String) {
-        val service = Api.retrofitService.getArticlesByCategory(category = category, Api.API_KEY)
+        val service = Api.retrofitService.getArticlesByCategory(category = category,
+//            Api.API_KEY
+        )
 
         service.enqueue(object : Callback<TopNewsResponse> {
             override fun onResponse(
@@ -91,6 +111,64 @@ class NewsManager {
 
         })
     }
+
+
+
+    fun getArticleBySource() {
+        val service = Api.retrofitService.getArticlesBySource(sourceName.value,
+        )
+
+        service.enqueue(object : Callback<TopNewsResponse> {
+            override fun onResponse(
+                call: Call<TopNewsResponse>,
+                response: Response<TopNewsResponse>
+            ) {
+                if (response.isSuccessful) {
+                    _getArticleBySource.value = response.body()!!
+                    Log.d("news", "${_getArticleBySource.value}")
+                } else {
+                    Log.d("error", "${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<TopNewsResponse>, t: Throwable) {
+
+                Log.d("error", "${t.printStackTrace()}")
+            }
+
+
+        })
+    }
+
+    fun getSearchedArticles(query: String) {
+        val service = Api.retrofitService.getArticles(query,)
+
+        service.enqueue(object : Callback<TopNewsResponse> {
+            override fun onResponse(
+                call: Call<TopNewsResponse>,
+                response: Response<TopNewsResponse>
+            ) {
+                if (response.isSuccessful) {
+                    _searchedNewsResponse.value = response.body()!!
+                    Log.d("Search", "${_searchedNewsResponse.value}")
+                } else {
+                    Log.d("Search error", "${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<TopNewsResponse>, t: Throwable) {
+
+                Log.d("Search error", "${t.printStackTrace()}")
+            }
+
+
+        })
+    }
+
+
+
+
+
 
 
     fun onSelectedCategoryChanged(category: String) {

@@ -51,46 +51,57 @@ fun Navigation(
     paddingValues: PaddingValues
 ) {
 
-    val articles = newsManager.newsResponse.value.articles
+    val articles = mutableListOf(TopNewsArticle())
+articles.addAll(newsManager.newsResponse.value.articles ?: listOf(TopNewsArticle()))
+//        newsManager.newsResponse.value.articles
     Log.d("news", "$articles")
 
     // articles can be nullable hence surround the entire navHost inside
     // articles?.let
-    articles?.let {
-        NavHost(
-            navController = navController,
-            startDestination =
-            BottomMenuScreen.TopNews.route,
-            modifier = Modifier.padding(paddingValues = paddingValues)
-        )
+    NavHost(
+        navController = navController,
+        startDestination =
+        BottomMenuScreen.TopNews.route,
+        modifier = Modifier.padding(paddingValues = paddingValues)
+    )
 
 
-        {
-            bottomNavigation(navController = navController, articles, newsManager = newsManager)
+    {
+        bottomNavigation(navController = navController, articles, newsManager = newsManager)
 
-            composable(
-                "Detail/{index}",
-                arguments = listOf(navArgument("index") {
-                    type = NavType.IntType
-                })
-            ) { navBackStackEntry ->
-                val index = navBackStackEntry.arguments?.getInt("index")
-                index?.let {
-                    val article = articles[index]
+        composable(
+            "Detail/{index}",
+            arguments = listOf(navArgument("index") {
+                type = NavType.IntType
+            })
+        ) { navBackStackEntry ->
+            val index = navBackStackEntry.arguments?.getInt("index")
+            index?.let {
+                if (newsManager.query.value.isNotEmpty()){
 
-                    DetailScreen(
-                        article = article,
-                        scrollState = scrollState,
-                        navController = navController
-                    )
+                    articles.clear()
+                    articles.addAll(newsManager.searchedNewsResponse.value.articles?: listOf())
+                }else{
+                    articles.clear()
+                    articles.addAll(newsManager.newsResponse.value.articles ?: listOf())
                 }
+
+                val article = articles[index]
+                DetailScreen(
+                    article = article,
+                    scrollState = scrollState,
+                    navController = navController
+                )
+            }
 //            DetailScreen(navController = navController, newsData = newsData)
 
-            }
         }
     }
 
 }
+
+
+
 
 fun NavGraphBuilder.bottomNavigation(
     navController: NavController,
@@ -98,7 +109,7 @@ fun NavGraphBuilder.bottomNavigation(
 ) {
 
     composable(BottomMenuScreen.TopNews.route) {
-        TopNews(navController = navController, articles = article)
+        TopNews(navController = navController, articles = article,newsManager.query , newsManager = newsManager)
     }
     composable(BottomMenuScreen.Categories.route) {
         newsManager.getArticleByCategory("business")
@@ -111,6 +122,6 @@ fun NavGraphBuilder.bottomNavigation(
         })
     }
     composable(BottomMenuScreen.Sources.route) {
-        Sources()
+        Sources(newsManager = newsManager)
     }
 }
