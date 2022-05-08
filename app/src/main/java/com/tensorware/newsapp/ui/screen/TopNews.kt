@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,9 +21,12 @@ import com.skydoves.landscapist.coil.CoilImage
 import com.tensorware.newsapp.MockData
 import com.tensorware.newsapp.MockData.getTimeAgo
 import com.tensorware.newsapp.R
+import com.tensorware.newsapp.components.ErrorUI
+import com.tensorware.newsapp.components.LoadingUI
 import com.tensorware.newsapp.components.SearchBar
 import com.tensorware.newsapp.model.TopNewsArticle
 import com.tensorware.newsapp.network.NewsManager
+import com.tensorware.newsapp.ui.MainViewModel
 import com.tensorware.newsapp.ui.theme.NewsAppTheme
 
 /**
@@ -34,7 +38,9 @@ fun TopNews(
     navController: NavController,
     articles: List<TopNewsArticle>,
     query: MutableState<String>,
-    newsManager: NewsManager
+    viewModel: MainViewModel,
+    isLoading: MutableState<Boolean>,
+    isError: MutableState<Boolean>
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -46,26 +52,40 @@ fun TopNews(
 //        }) {
 //            Text(text = "Go to Detail Screen")
 //        }
-        SearchBar(query = query, newsManager = newsManager)
+        SearchBar(query = query, viewModel = viewModel)
 
         val searchedText = query.value
         val resultList = mutableListOf<TopNewsArticle>()
         if (searchedText != "") {
-            resultList.addAll(newsManager.searchedNewsResponse.value.articles ?: articles)
+            resultList.addAll(
+                viewModel.searchedNewsResponse.collectAsState().value.articles ?: articles
+            )
         } else {
             resultList.addAll(articles)
         }
 
+        when {
+            isLoading.value -> {
+                LoadingUI()
+            }
+            isError.value -> {
+                ErrorUI()
+            }
+            else -> {
 
-        LazyColumn {
-            items(resultList.size) { index ->
-                TopNewsItem(
-                    article = resultList[index],
-                    onNewsClick = { navController.navigate("Detail/$index") }
+                LazyColumn {
+                    items(resultList.size) { index ->
+                        TopNewsItem(
+                            article = resultList[index],
+                            onNewsClick = { navController.navigate("Detail/$index") }
 
-                )
+                        )
+                    }
+                }
             }
         }
+
+
     }
 }
 

@@ -11,6 +11,7 @@ import com.tensorware.newsapp.MainApp
 import com.tensorware.newsapp.model.ArticleCategory
 import com.tensorware.newsapp.model.TopNewsResponse
 import com.tensorware.newsapp.model.getArticleCategory
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,17 +26,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         get() = _newsResponse
 
     // check loading state variable
-    private val _isLoading = MutableStateFlow(true)
+    private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _isError = MutableStateFlow(false)
+//    val isError: StateFlow<Boolean> = _isError     -> method 1
+    // method 2
+    val isError: StateFlow<Boolean>
+    get() = _isError
+
+    val errorHandler = CoroutineExceptionHandler{
+        _,error->
+        if (error is Exception){
+            _isError.value = true
+        }
+    }
 
     // create method to launch to get the article method
     fun getTopArticles() {
         _isLoading.value = true
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO + errorHandler) {
             _newsResponse.value = repository.getArticles()
+            _isLoading.value = false
         }
 
-        _isLoading.value = false
+
     }
 
     // getter function
@@ -52,15 +67,45 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun getArticlesByCategory(category: String) {
 
         _isLoading.value = true
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO + errorHandler) {
             _getArticleByCategory.value = repository.getArticlesByCategory(category = category)
+            _isLoading.value = false
         }
-        _isLoading.value = false
     }
 
-    fun onSelectedCategoryChanged(category: String){
+    val sourceName = MutableStateFlow("engadget")
+    private val _getArticleBySource = MutableStateFlow(TopNewsResponse())
+    val getArticleBySource: StateFlow<TopNewsResponse>
+        get() = _getArticleBySource
+
+    val query = MutableStateFlow("")
+    private val _searchedNewsResponse = MutableStateFlow(TopNewsResponse())
+    val searchedNewsResponse: StateFlow<TopNewsResponse>
+        get() = _searchedNewsResponse
+
+
+    fun onSelectedCategoryChanged(category: String) {
         val newCategory = getArticleCategory(category = category)
         _selectedCategory.value = newCategory
+    }
+
+
+    fun getArticleBySource(){
+        _isLoading.value = true
+
+        viewModelScope.launch(Dispatchers.IO + errorHandler) {
+            _getArticleBySource.value = repository.getArticlesBySource(sourceName.value)
+            _isLoading.value = false
+        }
+    }
+// get searched
+    fun getSearchedArticles(query: String){
+    _isLoading.value = true
+
+    viewModelScope.launch(Dispatchers.IO) {
+        _searchedNewsResponse.value = repository.getSearchedArticles(query = query)
+        _isLoading.value = false
+    }
     }
 
 

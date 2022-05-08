@@ -24,12 +24,18 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.tensorware.newsapp.R
+import com.tensorware.newsapp.components.ErrorUI
+import com.tensorware.newsapp.components.LoadingUI
 import com.tensorware.newsapp.model.TopNewsArticle
 import com.tensorware.newsapp.network.NewsManager
+import com.tensorware.newsapp.ui.MainViewModel
 
 
 @Composable
-fun Sources(newsManager: NewsManager) {
+fun Sources(
+    viewModel: MainViewModel, isLoading: MutableState<Boolean>,
+    isError: MutableState<Boolean>
+) {
 
     val items = listOf(
         "TechCrunch" to "techcrunch",
@@ -42,7 +48,7 @@ fun Sources(newsManager: NewsManager) {
 
     Scaffold(topBar = {
         TopAppBar(
-            title = { Text(text = "${newsManager.sourceName.value} Source") },
+            title = { Text(text = "${viewModel.sourceName.collectAsState().value} Source") },
             actions = {
                 var menuExpanded by remember {
                     mutableStateOf(false)
@@ -60,7 +66,9 @@ fun Sources(newsManager: NewsManager) {
 
                         items.forEach {
                             DropdownMenuItem(onClick = {
-                                newsManager.sourceName.value = it.second
+                                viewModel.sourceName.value = it.second
+                                viewModel.getArticleBySource()
+
                                 menuExpanded = false
                             }) {
                                 Text(it.first)
@@ -73,10 +81,21 @@ fun Sources(newsManager: NewsManager) {
         )
     }) {
 
-        newsManager.getArticleBySource()
-        val articles = newsManager.getArticleBySource.value
+        when {
+            isLoading.value -> {
+                LoadingUI()
+            }
+            isError.value -> {
+                ErrorUI()
+            }
+            else -> {
+                viewModel.getArticleBySource()
+                val articles = viewModel.getArticleBySource.collectAsState().value
 
-        SourceContent(articles = articles.articles ?: listOf())
+                SourceContent(articles = articles.articles ?: listOf())
+            }
+        }
+
 
     }
 }

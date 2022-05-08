@@ -3,6 +3,7 @@ package com.tensorware.newsapp.network
 import android.util.Log
 import androidx.compose.runtime.*
 import com.tensorware.newsapp.model.ArticleCategory
+import com.tensorware.newsapp.model.Source
 import com.tensorware.newsapp.model.TopNewsResponse
 import com.tensorware.newsapp.model.getArticleCategory
 import kotlinx.coroutines.Dispatchers
@@ -61,57 +62,19 @@ class NewsManager(private val service: NewsService) {
         }
 
 
-    fun getArticleBySource() {
-        val service = Api.retrofitService.getArticlesBySource(
-            sourceName.value,
-        )
+    suspend fun getArticlesBySource( source: String): TopNewsResponse =
+        withContext(Dispatchers.IO)
+        {
 
-        service.enqueue(object : Callback<TopNewsResponse> {
-            override fun onResponse(
-                call: Call<TopNewsResponse>,
-                response: Response<TopNewsResponse>
-            ) {
-                if (response.isSuccessful) {
-                    _getArticleBySource.value = response.body()!!
-                    Log.d("news", "${_getArticleBySource.value}")
-                } else {
-                    Log.d("error", "${response.code()}")
-                }
-            }
+            service.getArticlesBySource(sourceName.value)
+        }
 
-            override fun onFailure(call: Call<TopNewsResponse>, t: Throwable) {
+    suspend fun getSearchedArticles(query: String): TopNewsResponse =
+        withContext(Dispatchers.IO)
+        {
 
-                Log.d("error", "${t.printStackTrace()}")
-            }
-
-
-        })
-    }
-
-    fun getSearchedArticles(query: String) {
-        val service = Api.retrofitService.getArticles(query)
-
-        service.enqueue(object : Callback<TopNewsResponse> {
-            override fun onResponse(
-                call: Call<TopNewsResponse>,
-                response: Response<TopNewsResponse>
-            ) {
-                if (response.isSuccessful) {
-                    _searchedNewsResponse.value = response.body()!!
-                    Log.d("Search", "${_searchedNewsResponse.value}")
-                } else {
-                    Log.d("Search error", "${response.code()}")
-                }
-            }
-
-            override fun onFailure(call: Call<TopNewsResponse>, t: Throwable) {
-
-                Log.d("Search error", "${t.printStackTrace()}")
-            }
-
-
-        })
-    }
+            service.getArticles(query)
+        }
 
 
     fun onSelectedCategoryChanged(category: String) {
