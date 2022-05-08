@@ -5,6 +5,8 @@ import androidx.compose.runtime.*
 import com.tensorware.newsapp.model.ArticleCategory
 import com.tensorware.newsapp.model.TopNewsResponse
 import com.tensorware.newsapp.model.getArticleCategory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -13,7 +15,7 @@ import retrofit2.Response
 /**
  * Created by Raghu N Sharman on 05-05-2022 at 15:38.
  */
-class NewsManager {
+class NewsManager(private val service: NewsService) {
 
 
     private val _newsResponse = mutableStateOf(TopNewsResponse())
@@ -24,12 +26,6 @@ class NewsManager {
 
     val sourceName = mutableStateOf("abc-news")
 
-
-    private val _getArticleByCategory = mutableStateOf(TopNewsResponse())
-    val getArticleByCategory: MutableState<TopNewsResponse>
-        @Composable get() = remember {
-            _getArticleByCategory
-        }
 
     private val _getArticleBySource = mutableStateOf(TopNewsResponse())
     val getArticleBySource: MutableState<TopNewsResponse>
@@ -42,9 +38,6 @@ class NewsManager {
 
     val selectedCategory: MutableState<ArticleCategory?> = mutableStateOf(null)
 
-    init {
-        getArticles()
-    }
 
     private val _searchedNewsResponse = mutableStateOf(TopNewsResponse())
     val searchedNewsResponse: MutableState<TopNewsResponse>
@@ -53,69 +46,24 @@ class NewsManager {
         }
 
 
-    private fun getArticles() {
-        val service = Api.retrofitService.getTopArticles(
-            "US",
-//            Api.API_KEY
-        )
+    suspend fun getArticles(country: String): TopNewsResponse = withContext(Dispatchers.IO) {
 
+        service.getTopArticles(country = country)
 
-        service.enqueue(object : Callback<TopNewsResponse> {
-            override fun onResponse(
-                call: Call<TopNewsResponse>,
-                response: Response<TopNewsResponse>
-            ) {
-                if (response.isSuccessful) {
-                    _newsResponse.value = response.body()!!
-                    Log.d("news", "${_newsResponse.value}")
-                } else {
-                    Log.d("error", "${response.body()}")
-                }
-
-
-            }
-
-            override fun onFailure(call: Call<TopNewsResponse>, t: Throwable) {
-
-                Log.d("error", "${t.printStackTrace()}")
-            }
-
-
-        })
     }
 
 
-     fun getArticleByCategory(category: String) {
-        val service = Api.retrofitService.getArticlesByCategory(category = category,
-//            Api.API_KEY
-        )
+    suspend fun getArticleByCategory(category: String): TopNewsResponse =
+        withContext(Dispatchers.IO)
+        {
 
-        service.enqueue(object : Callback<TopNewsResponse> {
-            override fun onResponse(
-                call: Call<TopNewsResponse>,
-                response: Response<TopNewsResponse>
-            ) {
-                if (response.isSuccessful) {
-                    _getArticleByCategory.value = response.body()!!
-                    Log.d("news", "${_getArticleByCategory.value}")
-                } else {
-                    Log.d("error", "${response.code()}")
-                }
-            }
-
-            override fun onFailure(call: Call<TopNewsResponse>, t: Throwable) {
-
-                Log.d("error", "${t.printStackTrace()}")
-            }
-
-
-        })
-    }
-
+            service.getArticlesByCategory(category = category)
+        }
 
 
     fun getArticleBySource() {
-        val service = Api.retrofitService.getArticlesBySource(sourceName.value,
+        val service = Api.retrofitService.getArticlesBySource(
+            sourceName.value,
         )
 
         service.enqueue(object : Callback<TopNewsResponse> {
@@ -141,7 +89,7 @@ class NewsManager {
     }
 
     fun getSearchedArticles(query: String) {
-        val service = Api.retrofitService.getArticles(query,)
+        val service = Api.retrofitService.getArticles(query)
 
         service.enqueue(object : Callback<TopNewsResponse> {
             override fun onResponse(
@@ -164,11 +112,6 @@ class NewsManager {
 
         })
     }
-
-
-
-
-
 
 
     fun onSelectedCategoryChanged(category: String) {

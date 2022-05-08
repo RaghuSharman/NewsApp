@@ -25,9 +25,10 @@ import com.tensorware.newsapp.R
 import com.tensorware.newsapp.model.TopNewsArticle
 import com.tensorware.newsapp.model.getAllArticleCategory
 import com.tensorware.newsapp.network.NewsManager
+import com.tensorware.newsapp.ui.MainViewModel
 
 @Composable
-fun Categories(onFetchCategory: (String) -> Unit = {}, newsManager: NewsManager) {
+fun Categories(onFetchCategory: (String) -> Unit = {}, viewModel: MainViewModel) {
     val tabsItems = getAllArticleCategory()
     Column {
         LazyRow() {
@@ -37,12 +38,12 @@ fun Categories(onFetchCategory: (String) -> Unit = {}, newsManager: NewsManager)
                 CategoryTab(
                     category = category.categoryName,
                     onFetchCategory = onFetchCategory,
-                    isSelected = newsManager.selectedCategory.value == category
+                    isSelected = viewModel.selectedCategory.value == category
                 )
             }
         }
 
-        ArticleContent(articles = newsManager.getArticleByCategory.value.articles ?: listOf())
+        ArticleContent(articles = viewModel.getArticleByCategory.value.articles ?: listOf())
     }
 
 
